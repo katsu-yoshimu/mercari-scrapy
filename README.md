@@ -29,7 +29,7 @@
 3. **ローカルPCに必要なPythonパッケージをインストール:**
 
    ```cmd
-   cd touki-scrapy
+   cd mercari-scrapy
    pip install -r requirements.txt
    ```
 
