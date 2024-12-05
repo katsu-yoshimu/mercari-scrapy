@@ -41,10 +41,16 @@
    python trial.py
    ```
 
-   スクレーピング結果はコマンドコンソール画面に表示されます。
-   なお、標準出力をファイルにリダイレクトするとエラー（UnicodeEncodeError: 'cp932' codec can't encode character '\u2728'）になりますので、ご留意ください。
+2. **実行結果:**
 
-2. **補足:**
+   「./output」ディレクトリにExcelファイルを作成します。作成時刻ごとにファイルを作成します。以下は「./output」ディレクトリの例です。
+
+   ```cmd
+   dir output
+   2024/12/05  09:16            84,038 output_20241205_091619.xlsx
+   ```
+
+3. **補足:**
 
    - スクリプト実行中に自動起動されるブラウザは手動操作しないでください。このブラウザを非表示にすることも可能です。「selenimuContorller.py」のコメントアウトしている「# options.add_argument('--headless')」を「options.add_argument('--headless')」と変更して有効化してください。
 

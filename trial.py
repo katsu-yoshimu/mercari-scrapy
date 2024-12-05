@@ -6,7 +6,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait, Select
 import time
-import json
 
 ctrl = selenimuContorller()
 
@@ -41,7 +40,7 @@ data = []
 items = ctrl.driver.find_elements(By.XPATH, '//li[@data-testid="item-cell"]//a')
 for item in items:
     # 商品詳細ページURL
-    url_detail = item.get_attribute('href')
+    detail_url = item.get_attribute('href')
     # 商品名と価格
     name_price = item.find_element(By.XPATH, 'div').get_attribute('aria-label')
     # メルカリID
@@ -52,33 +51,31 @@ for item in items:
     data.append(
         {
             'mercari_id' : mercari_id,
-            'url_detail' : url_detail,
+            'detail_url' : detail_url,
             'name_price' : name_price,
             'thumb_url'  : thumb_url,
         }   
     )
 
-# 一覧ページのスクレイピング結果表示
-print(json.dumps(data, indent=4, ensure_ascii = False))
-
+data_detail = []
 # 詳細ページ
 for link in data:
     # データ初期化
-    url_detail = link['url_detail']
+    detail_url = link['detail_url']
     name = ''
     price = ''
     desc = ''
     img_url = []
 
     # 詳細ページ
-    ctrl.getUrl(url_detail)
+    ctrl.getUrl(detail_url)
     try:
         ctrl.wait(10, By.XPATH, '//*[@data-testid="description"]') # 要素表示するまで待つ
     except Exception as e:
         continue
         # ★ToDo★ リトライとリトライアウトの組み込み
 
-    if ('/item/' in url_detail):
+    if ('/item/' in detail_url):
         # 商品名
         name = ctrl.driver.find_element(By.XPATH, '//*[@data-testid="name"]//h1').get_attribute('textContent')
         # 価格
@@ -98,15 +95,22 @@ for link in data:
     for el in els:
         img_url.append(el.get_attribute('src'))
 
-    data = {
-            'url_detail' : url_detail,
+    data_detail.append({
+            'detail_url' : detail_url,
             'name'       : name,
             'price'      : price,
             'desc'       : desc,
-            'img_url'    : img_url,
-        }
-    
-    # 詳細ページのスクレイピング結果の表示
-    print(json.dumps(data, indent=4, ensure_ascii = False))
-    
+            'img_urls'    : img_url,
+        })
+
+# ブラウザ閉じる  
 ctrl.close()
+
+import os
+import sys
+# カレントディレクトリ変更
+os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
+
+# Excel出力
+from outputExcel import outputExcel
+outputExcel(key_word, data, data_detail)
