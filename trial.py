@@ -29,7 +29,7 @@ time.sleep(10)   # このwaitは必要。早くスクロールを開始すると
 # 「新しい順」になっていなければエラーメッセージを出力して異常終了
 sort_order = ctrl.driver.find_element(By.XPATH, '//select[@name="sortOrder"]').get_attribute('value')
 if 'created_time:desc' != sort_order:
-    raise Exception(f'ソート順=[{sort_order}]が「新しい順」になっていない')
+    raise Exception(f'ソート順=[{sort_order}]が「新しい順=created_time:desc」でない')
 
 # 下までスクロールする。そうしないと全件表示できない
 ctrl.scroll(4)
@@ -61,7 +61,10 @@ for item in items:
 
 data_detail = []
 # 詳細ページ
-for link in data:
+data_count = len(data)
+for i, link in enumerate(data):
+    print(f'商品詳細ページ取得[{i+1}/{data_count}]回')
+
     # データ初期化
     detail_url = link['detail_url']
     name = ''
