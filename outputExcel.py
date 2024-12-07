@@ -43,7 +43,7 @@ def outputExcel(key_word, data, data_detail):
                 # 詳細データ出力
                 ws.cell(row=row_count, column=7).value = detail['name']
                 ws.cell(row=row_count, column=8).value = detail['price']
-                ws.cell(row=row_count, column=9).value = detail['desc']
+                ws.cell(row=row_count, column=9).value = detail['desc'] # ★ToDo★データの先頭が「=」のときエラーになす
                 col_count = 9
                 for img_url in detail['img_urls']:
                     col_count += 1
