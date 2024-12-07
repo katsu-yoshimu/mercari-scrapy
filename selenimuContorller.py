@@ -11,20 +11,49 @@ class selenimuContorller():
     driver = ""
     actionCount = 0
 
-    INTERVAL_TIME=3 # リスクエス間隔は3秒に仮置き
+    INTERVAL_TIME = 3 # リクエスト間隔は3秒に仮置き
     last_processed_time = 0
 
     def __init__(self):
         self.actionlog(f'[open] ブラウザを開きます。')
+        self.last_processed_time = time.time()
         # オプション指定
         options = webdriver.ChromeOptions()
         # options.add_argument('--headless')
         options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36')
         options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_argument("--no-sandbox")
+        # options.add_argument("--single-process")
+        # options.add_argument("--disable-dev-shm-usage")
+        # options.add_argument("--disable-gpu")
+        # options.add_argument("--window-size=1280x1696")
+        # options.add_argument("--disable-application-cache")
+        # options.add_argument("--disable-infobars")
+        # options.add_argument("--hide-scrollbars")
+        # options.add_argument("--enable-logging")
+        # options.add_argument("--log-level=0")
+        # options.add_argument("--ignore-certificate-errors")
+        # options.add_argument("--homedir=/tmp")
+        # ★ToDo★ 他のオプションも追加する aws-lambda で指定が必要なものなどを検索して調べる
+        # https://qiita.com/murodon/items/1f9ad9183594769b447e
+        # https://dev.classmethod.jp/articles/aws-lambda-python-selenium-make-env/
+        # ★ToDo★ オプションをつけすぎるとブラウザが起動しない。再起動も必要になる
         self.driver = webdriver.Chrome(options=options)
 
     def getUrl(self, url):
         self.actionlog(f'[get] [ {url} ]を表示します。')
+        # 初回は必ず3秒待ちを入れる
+        if self.actionCount == 2:
+            # 前回の処理時間からの経過時間
+            elapsed_time = time.time() - self.last_processed_time
+            self.log(f'経過時間：{elapsed_time:.3f}秒')
+            # 経過時間がリクエスト間隔よりも短い場合にリクエストを待ち合わせる
+            if elapsed_time < self.INTERVAL_TIME:
+                sleep_time = (self.INTERVAL_TIME - elapsed_time) * random.uniform(0.8, 1.2)
+                self.log(f'待機時間：{sleep_time:.3f}秒')
+                time.sleep(sleep_time)
+            self.last_processed_time = time.time()
+
         self.driver.get(url)
 
     def close(self):
@@ -48,7 +77,6 @@ class selenimuContorller():
         else:
             self.actionlog(f'[wait] 要素[{elementType},{elementValue}]、もしくは、要素[{elementType2},{elementValue2}]、もしくは、要素[{elementType3},{elementValue3}]、もしくは、要素[{elementType4},{elementValue4}]の表示を最大[{waitTime}]秒待ちます。')
         
-        # try:
         wait = WebDriverWait(self.driver, waitTime)
         if elementType2 == '':
             element = wait.until(EC.visibility_of_element_located((elementType, elementValue)))    
@@ -77,9 +105,6 @@ class selenimuContorller():
                 )
             )
 
-        # except Exception as e:
-        #     self.errorlog(f'エラーが発生しました: {e}')
-
         # 前回の処理時間からの経過時間
         elapsed_time = time.time() - self.last_processed_time
         self.log(f'経過時間：{elapsed_time:.3f}秒')
@@ -94,15 +119,7 @@ class selenimuContorller():
 
     def click(self, elementType, elementValue):
         self.actionlog(f'[click] 要素[{elementType},{elementValue}]をクリックします。')
-
-        # if len(self.driver.find_elements(elementType, elementValue)) == 0:
-        #     self.errorlog(f'エラーが発生しました: 要素[{elementType},{elementValue}]はありません。')
-        #     return
-        
-        # try:
         self.driver.find_element(elementType, elementValue).click()
-        # except Exception as e:
-        #     self.errorlog(f'エラーが発生しました: {e}')
 
     def send_keys(self, elementType, elementValue, sendValue, hide_input_value=False):
         input_value = sendValue
@@ -110,34 +127,25 @@ class selenimuContorller():
             input_value = '**********'
         self.actionlog(f'[send_keys] 要素[{elementType},{elementValue}]に[{input_value}]を入力します。')
         
-        # if len(self.driver.find_elements(elementType, elementValue)) == 0:
-        #     self.errorlog(f"エラーが発生しました: 要素[{elementType},{elementValue}]はありません。")
-        #     return
-
-        # try:
         self.driver.find_element(elementType, elementValue).clear()
         self.driver.find_element(elementType, elementValue).send_keys(sendValue)
-
-        # except Exception as e:
-        #     self.errorlog(f'エラーが発生しました: {e}')
 
     def select(self, elementType, elementValue, selectValue):
         self.actionlog(f'[select_by_value] 要素[{elementType},{elementValue}]の[{selectValue}]を選択します。')
 
-        # try:
         Select(self.driver.find_element(elementType, elementValue)).select_by_value(selectValue)
-
-        # except Exception as e:
-        #     self.errorlog(f'エラーが発生しました: {e}')
 
     def select_by_index(self, elementType, elementValue, selectValue):
         self.actionlog(f'[select_by_index] 要素[{elementType},{elementValue}]の[{selectValue}]を選択します。')
 
-        # try:
         Select(self.driver.find_element(elementType, elementValue)).select_by_index(selectValue)
 
-        # except Exception as e:
-        #     self.errorlog(f'エラーが発生しました: {e}')
+    def scroll(self, pixel=1):
+        self.actionlog(f'[scroll] スクロールします。[{pixel}]ピクセルごと。')
+
+        height = self.driver.execute_script("return document.body.scrollHeight")
+        for x in range(1, height, pixel):
+            self.driver.execute_script("window.scrollTo(0, " + str(x) + ");")
 
     def is_enabled(self, elementType, elementValue):
         if len(self.driver.find_elements(elementType, elementValue)) == 0:

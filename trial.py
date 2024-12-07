@@ -4,38 +4,40 @@ key_word = '時計 tag heuer'
 from selenimuContorller import selenimuContorller
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait, Select
 import time
 
 ctrl = selenimuContorller()
 
 # メルカリトップページ
 # 「お使いのブラウザがWebサイトに対応していない、または最新版でない可能性があります。…」
-# と表示される ★ToDo★ 表示されないように対応すること
+# と表示される ★ToDo★ 表示されないように対応すること → これは分からない。リクエストヘッダは同じはず
 ctrl.getUrl('https://jp.mercari.com/')
 
 # 横幅が狭いときに検索キーワードの入力できないため横幅広げる
 ctrl.driver.set_window_size(1048, 1048)
 
 # 検索キーワード入力＋「Enter」キー押す
-ctrl.wait(10, By.XPATH, '//input[@aria-label="検索キーワードを入力"]') # 要素表示するまで待つ
+ctrl.wait(10, By.XPATH, '//input[@aria-label="検索キーワードを入力"]')
 ctrl.send_keys(By.XPATH, '//input[@aria-label="検索キーワードを入力"]', key_word + Keys.ENTER)
 
 # ソート順を「新しい順」に変更
-time.sleep(5)   # 入力可能かどうか？をwaitにする ★ToDo★
-ctrl.select_by_index(By.XPATH,
-    '//select[@name="sortOrder"]',
-    1)
+ctrl.wait(10, By.XPATH, '//select[@name="sortOrder"]')
+ctrl.select_by_index(By.XPATH, '//select[@name="sortOrder"]', 1)
 
-time.sleep(5)   # スクロール可能かどうか？をwaitする ★ToDo★
+time.sleep(10)   # このwaitは必要。早くスクロールを開始すると「おすすめ順」に戻ることがある
 
-# ★ToDo★ パッケージに昇格 下までスクロールすると全件表示できない
-height = ctrl.driver.execute_script("return document.body.scrollHeight")
-for x in range(1, height):
-    ctrl.driver.execute_script("window.scrollTo(0, " + str(x) + ");")
+# 「新しい順」になっていなければエラーメッセージを出力して異常終了
+sort_order = ctrl.driver.find_element(By.XPATH, '//select[@name="sortOrder"]').get_attribute('value')
+if 'created_time:desc' != sort_order:
+    raise Exception(f'ソート順=[{sort_order}]が「新しい順」になっていない')
 
-time.sleep(5)   # 商品情報がすべて表示されているかどうか？をwaitする ★ToDo★
+# 下までスクロールする。そうしないと全件表示できない
+ctrl.scroll(4)
 
+# 「次へ」リンクの有無判定 1:リンクあり/0：リンクなし
+next_link_count = ctrl.get_element_count(By.XPATH, '//a[contains(text(), "次へ")]')
+
+# 一覧データの取得
 data = []
 items = ctrl.driver.find_elements(By.XPATH, '//li[@data-testid="item-cell"]//a')
 for item in items:
