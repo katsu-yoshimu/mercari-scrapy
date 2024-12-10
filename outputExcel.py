@@ -33,7 +33,10 @@ def outputExcel(key_word, data, data_detail):
         ws.cell(row=row_count, column=2).value = data_count
         # 一覧データ出力
         ws.cell(row=row_count, column=3).value = item['mercari_id']
-        ws.cell(row=row_count, column=4).value = item['name_price']
+        if "=" == item['name_price'][0]:
+            ws.cell(row=row_count, column=4).value = "'" + item['name_price']
+        else:
+            ws.cell(row=row_count, column=4).value = item['name_price']
         ws.cell(row=row_count, column=5).value = item['thumb_url']
         ws.cell(row=row_count, column=6).value = item['detail_url']
         
@@ -41,13 +44,20 @@ def outputExcel(key_word, data, data_detail):
             #  "detail_url" が一致しているものがあれば
             if  item['detail_url'] == detail['detail_url']:
                 # 詳細データ出力
-                ws.cell(row=row_count, column=7).value = detail['name']
+                if "=" == detail['name'][0]:
+                    ws.cell(row=row_count, column=7).value = "'" + detail['name']
+                else:
+                    ws.cell(row=row_count, column=7).value = detail['name']
                 ws.cell(row=row_count, column=8).value = detail['price']
-                ws.cell(row=row_count, column=9).value = detail['desc'] # ★ToDo★データの先頭が「=」のときエラーになす
+                if "=" == detail['desc'][0]:
+                    ws.cell(row=row_count, column=9).value = "'" + detail['desc']
+                else:
+                    ws.cell(row=row_count, column=9).value = detail['desc']
                 col_count = 9
                 for img_url in detail['img_urls']:
                     col_count += 1
                     ws.cell(row=row_count, column=col_count).value = img_url
+
 
     # Excel出力
     wb.save(output_file_path)
